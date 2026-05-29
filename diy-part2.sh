@@ -1,20 +1,20 @@
-#!/bin/bash
-#
-# https://github.com/P3TERX/Actions-OpenWrt
-# File name: diy-part2.sh
-# Description: OpenWrt DIY script part 2 (After Update feeds)
-#
-# Copyright (c) 2019-2024 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
+# 1. تغيير الأيبي الافتراضي للدخول للراوتر إلى 192.168.10.1 (لتجنب التعارض مع المايكروتك)
+sed -i 's/192.168.1.1/192.168.10.1/g' package/base-files/files/bin/config_generate
 
-# Modify default IP
-#sed -i 's/192.168.1.1/192.168.50.5/g' package/base-files/files/bin/config_generate
+# 2. تعديل إعدادات الشبكة الافتراضية لقفل الـ DHCP والـ IPv6 تلقائياً لمنع اللوب وقفل الشبكات
+cat << 'EOF' >> package/base-files/files/etc/config/dhcp
+config dhcp 'lan'
+	option interface 'lan'
+	option start '100'
+	option limit '150'
+	option leasetime '12h'
+	option ignore '1'
 
-# Modify default theme
-#sed -i 's/luci-theme-bootstrap/luci-theme-argon/g' feeds/luci/collections/luci/Makefile
+config odhcpd 'lan'
+	option maindhcp '0'
+	option mode 'disabled'
+EOF
 
-# Modify hostname
-#sed -i 's/OpenWrt/P3TERX-Router/g' package/base-files/files/bin/config_generate
+# 3. إضافة حزم ومميزات إضافية لدعم معالج MT7621 الخاص بجهاز KT708
+echo "CONFIG_PACKAGE_luci-app-ttyd=y" >> .config
+echo "CONFIG_PACKAGE_luci-app-watchcat=y" >> .config
